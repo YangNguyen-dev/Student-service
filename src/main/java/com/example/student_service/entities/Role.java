@@ -5,9 +5,8 @@ import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
-import java.security.Permission;
-import java.time.LocalDateTime;
-import java.util.Set;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "roles")
@@ -18,6 +17,7 @@ import java.util.Set;
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class Role {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "role_id")
@@ -30,11 +30,7 @@ public class Role {
     @Column(name = "description")
     String description;
 
-    @Column(name = "created_at", updatable = false)
-    LocalDateTime createdAt;
-
-    // Relationships
     @OneToMany(mappedBy = "role", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @Builder.Default
-    Set<Permission> permissions;
+    List<UserRole> userRoles = new ArrayList<>();
 }

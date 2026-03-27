@@ -5,6 +5,6 @@ package com.example.student_service.enums;
  */
 public enum Roles {
     ADMIN, // Quản trị viên
-    STAFF, // Giáo viên
-    GUEST; // Học sinh
+    TEACHER, // Giáo viên
+    STUDENT; // Học sinh
 }

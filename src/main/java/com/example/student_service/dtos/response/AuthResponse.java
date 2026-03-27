@@ -6,15 +6,23 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldDefaults;
 
-import java.util.Set;
-
+/**
+ * DTO trả về khi xác thực thành công (đăng nhập, đăng ký, làm mới token).
+ */
 @Data
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
 @FieldDefaults(level = lombok.AccessLevel.PRIVATE)
 public class AuthResponse {
+    /** Access token JWT (thời hạn ngắn) */
     String token;
+
+    /** Refresh token JWT (thời hạn dài, dùng để lấy token mới) */
+    String refreshToken;
+
     String username;
-    Set<String> roles;
+    String fullName;
+    String role;
+    String avatarUrl;
 }

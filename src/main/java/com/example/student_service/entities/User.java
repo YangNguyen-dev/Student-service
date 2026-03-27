@@ -1,27 +1,41 @@
 package com.example.student_service.entities;
 
-import com.example.student_service.dtos.request.RegisterRequest;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 import lombok.*;
 
-import java.util.Set;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
+@Table(name = "users")
 @Getter
 @Setter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class User extends RegisterRequest {
+public class User {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @Column(name = "user_id")
+    Long userId;
 
-    private String username;
-    private String password;
+    @Column(name = "username", nullable = false, unique = true, length = 150)
+    String username;
 
-    Set<String> roles;
+    @Column(name = "email", nullable = false, unique = true, length = 150)
+    String email;
+
+    @Column(name = "full_name", length = 255)
+    String fullName;
+
+    @Column(name = "avatar_url", length = 500)
+    String avatarUrl;
+
+    @Column(name = "password_hash", nullable = false)
+    String passwordHash;
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @Builder.Default
+    List<UserRole> userRoles = new ArrayList<>();
 }

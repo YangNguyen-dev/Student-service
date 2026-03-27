@@ -2,6 +2,7 @@ package com.example.student_service.config;
 
 import com.example.student_service.entities.Role;
 import com.example.student_service.entities.User;
+import com.example.student_service.entities.UserRole;
 import com.example.student_service.enums.Roles;
 import com.example.student_service.repositories.RoleRepository;
 import com.example.student_service.repositories.UserRepository;
@@ -32,8 +33,11 @@ public class ApplicationInitConfig {
             if (!repo.existsByUsername("admin")) {
                 User admin = User.builder()
                         .username("admin")
-                        .passwordH(passwordEncoder.encode("admin"))
+                        .email("duonghoangfc6@gmail.com")
+                        .passwordHash(passwordEncoder.encode("admin"))
                         .build();
+
+                repo.save(admin);
 
                 UserRole adminUserRole = UserRole.builder()
                         .user(admin)

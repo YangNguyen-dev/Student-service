@@ -1,10 +1,10 @@
 package com.example.student_service.entities;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.IdClass;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
+
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "user_roles")
@@ -16,4 +16,23 @@ import lombok.experimental.FieldDefaults;
 @IdClass(UserRoleId.class)
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class UserRole {
+
+    @Id
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id")
+    User user;
+
+    @Id
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "role_id")
+    Role role;
+
+    @Column(name = "created_at", updatable = false)
+    LocalDateTime createdAt;
+
+    @PrePersist
+    protected void onCreate() {
+        createdAt = LocalDateTime.now();
+    }
+
 }

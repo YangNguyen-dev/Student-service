@@ -1,0 +1,268 @@
+import { useState } from 'react';
+import { useNavigate, Link as RouterLink } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
+import { useThemeMode } from '../context/ThemeContext';
+import {
+  Box, Card, CardContent, TextField, Button, Typography, Link, Alert,
+  InputAdornment, IconButton, CircularProgress, Tooltip,
+} from '@mui/material';
+import {
+  Visibility, VisibilityOff, SchoolRounded, PersonOutline, LockOutlined,
+  LightModeRounded, DarkModeRounded, AutoAwesomeRounded,
+} from '@mui/icons-material';
+
+// Small sparkle stars
+function SparkleStars({ isDark }) {
+  return (
+    <>
+      {[...Array(5)].map((_, i) => (
+        <Box key={i} sx={{
+          position: 'absolute', zIndex: 0,
+          top: `${10 + Math.random() * 80}%`,
+          left: `${5 + Math.random() * 90}%`,
+          width: 4 + i * 2, height: 4 + i * 2,
+          borderRadius: '50%',
+          background: isDark
+            ? `rgba(139,131,255,${0.15 + i * 0.05})`
+            : `rgba(108,99,255,${0.08 + i * 0.03})`,
+          animation: `float-gentle ${3 + i * 1.5}s ease-in-out infinite ${i * 0.7}s`,
+          filter: 'blur(1px)',
+        }} />
+      ))}
+    </>
+  );
+}
+
+export default function LoginPage() {
+  const navigate = useNavigate();
+  const { login } = useAuth();
+  const { mode, toggleTheme } = useThemeMode();
+  const isDark = mode === 'dark';
+
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError('');
+    if (!username.trim() || !password.trim()) {
+      setError('Vui lòng nhập đầy đủ thông tin');
+      return;
+    }
+    setLoading(true);
+    try {
+      await login(username, password);
+      navigate('/dashboard', { replace: true });
+    } catch (err) {
+      setError(err.response?.data?.message || 'Sai tên đăng nhập hoặc mật khẩu');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <Box sx={{
+      minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center',
+      background: isDark
+        ? 'linear-gradient(135deg, #0F1117 0%, #1A1D2E 30%, #141720 60%, #0F1117 100%)'
+        : 'linear-gradient(135deg, #E8EAFF 0%, #FCE4EC 30%, #E0F7FA 60%, #EDE7F6 100%)',
+      backgroundSize: '400% 400%', animation: 'gradient-shift 15s ease infinite',
+      position: 'relative', overflow: 'hidden', px: 2,
+    }}>
+      {/* Animated orbs */}
+      <Box sx={{
+        position: 'absolute', width: 500, height: 500, borderRadius: '50%',
+        background: isDark
+          ? 'radial-gradient(circle, rgba(108,99,255,0.2) 0%, transparent 60%)'
+          : 'radial-gradient(circle, rgba(108,99,255,0.12) 0%, transparent 60%)',
+        top: -150, right: -150, filter: 'blur(60px)',
+        animation: 'float-gentle 8s ease-in-out infinite',
+      }} />
+      <Box sx={{
+        position: 'absolute', width: 400, height: 400, borderRadius: '50%',
+        background: isDark
+          ? 'radial-gradient(circle, rgba(255,101,132,0.15) 0%, transparent 60%)'
+          : 'radial-gradient(circle, rgba(255,101,132,0.1) 0%, transparent 60%)',
+        bottom: -120, left: -120, filter: 'blur(60px)',
+        animation: 'float-gentle 10s ease-in-out infinite reverse',
+      }} />
+      <Box sx={{
+        position: 'absolute', width: 250, height: 250, borderRadius: '50%',
+        background: isDark
+          ? 'radial-gradient(circle, rgba(6,182,212,0.12) 0%, transparent 60%)'
+          : 'radial-gradient(circle, rgba(6,182,212,0.08) 0%, transparent 60%)',
+        top: '50%', left: '10%', filter: 'blur(40px)',
+        animation: 'float-gentle 12s ease-in-out infinite 3s',
+      }} />
+
+      {/* Mini sparkle stars */}
+      <SparkleStars isDark={isDark} />
+
+      {/* Theme toggle */}
+      <Tooltip title={isDark ? 'Chế độ sáng' : 'Chế độ tối'}>
+        <IconButton onClick={toggleTheme}
+          sx={{
+            position: 'absolute', top: 20, right: 20, zIndex: 10,
+            color: isDark ? '#FFC107' : '#6C63FF',
+            backgroundColor: isDark ? 'rgba(255,193,7,0.1)' : 'rgba(108,99,255,0.08)',
+            backdropFilter: 'blur(10px)',
+            border: isDark ? '1px solid rgba(255,193,7,0.2)' : '1px solid rgba(108,99,255,0.15)',
+            transition: 'all 0.3s ease',
+            '&:hover': { transform: 'rotate(30deg) scale(1.1)', backgroundColor: isDark ? 'rgba(255,193,7,0.2)' : 'rgba(108,99,255,0.15)' },
+          }}>
+          {isDark ? <LightModeRounded /> : <DarkModeRounded />}
+        </IconButton>
+      </Tooltip>
+
+      {/* Card with animated gradient border */}
+      <Box sx={{
+        position: 'relative', zIndex: 1, width: '100%', maxWidth: 460,
+        animation: 'scale-in 0.6s ease-out',
+        // Animated gradient border glow
+        '&::before': {
+          content: '""', position: 'absolute', inset: -2,
+          borderRadius: 22, // ~5 * 4 + 2
+          background: 'linear-gradient(135deg, #6C63FF, #FF6584, #06B6D4, #10B981, #6C63FF)',
+          backgroundSize: '300% 300%',
+          animation: 'gradient-shift 4s ease infinite',
+          opacity: isDark ? 0.6 : 0.3,
+          filter: 'blur(6px)',
+          zIndex: -1,
+        },
+      }}>
+        <Card sx={{
+          borderRadius: 5,
+          background: isDark ? 'rgba(26,29,46,0.92)' : 'rgba(255,255,255,0.88)',
+          backdropFilter: 'blur(24px)',
+          border: isDark ? '1px solid rgba(139,131,255,0.12)' : '1px solid rgba(108,99,255,0.08)',
+          boxShadow: isDark
+            ? '0 20px 60px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.05)'
+            : '0 20px 60px rgba(108,99,255,0.08), 0 4px 20px rgba(0,0,0,0.04), inset 0 1px 0 rgba(255,255,255,0.9)',
+          overflow: 'hidden',
+          position: 'relative',
+          // Shine sweep
+          '&::after': {
+            content: '""', position: 'absolute',
+            top: '-50%', left: '-50%', width: '200%', height: '200%',
+            background: `linear-gradient(to right, transparent 0%, ${isDark ? 'rgba(255,255,255,0.02)' : 'rgba(255,255,255,0.06)'} 40%, ${isDark ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.12)'} 50%, ${isDark ? 'rgba(255,255,255,0.02)' : 'rgba(255,255,255,0.06)'} 60%, transparent 100%)`,
+            transform: 'rotate(30deg)',
+            animation: 'card-shine-move 6s ease-in-out infinite',
+            pointerEvents: 'none',
+          },
+        }}>
+          <CardContent sx={{ p: { xs: 4, sm: 5 }, position: 'relative', zIndex: 1 }}>
+            {/* Logo */}
+            <Box sx={{ textAlign: 'center', mb: 4 }}>
+              <Box sx={{
+                width: 72, height: 72, borderRadius: 4, mx: 'auto', mb: 2.5,
+                background: 'linear-gradient(135deg, #6C63FF, #FF6584)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                boxShadow: '0 8px 32px rgba(108, 99, 255, 0.35)',
+                animation: 'float-gentle 4s ease-in-out infinite',
+                position: 'relative',
+                '&::after': {
+                  content: '""', position: 'absolute', inset: -6, borderRadius: 'inherit',
+                  background: 'linear-gradient(135deg, rgba(108,99,255,0.25), rgba(255,101,132,0.25))',
+                  filter: 'blur(16px)', zIndex: -1, animation: 'glow-pulse 3s ease-in-out infinite',
+                },
+              }}>
+                <SchoolRounded sx={{ fontSize: 38, color: '#fff' }} />
+              </Box>
+              <Typography variant="h4" sx={{
+                color: isDark ? '#E8EAED' : '#1A1A2E', fontWeight: 900, letterSpacing: '-0.02em',
+                background: isDark ? 'linear-gradient(135deg, #E8EAED, #8B83FF)' : 'linear-gradient(135deg, #1A1A2E, #6C63FF)',
+                WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
+              }}>
+                Đăng Nhập
+              </Typography>
+              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0.5, mt: 0.5 }}>
+                <AutoAwesomeRounded sx={{ fontSize: 14, color: isDark ? '#8B83FF' : '#6C63FF' }} />
+                <Typography variant="body2" sx={{ color: isDark ? '#9AA0B4' : '#6B7280', fontWeight: 500, letterSpacing: '0.05em' }}>
+                  Quản Lý Học Tập
+                </Typography>
+              </Box>
+            </Box>
+
+            {error && (
+              <Alert severity="error" sx={{ mb: 3, borderRadius: 2.5, animation: 'fade-in-up 0.3s ease-out' }} onClose={() => setError('')}>
+                {error}
+              </Alert>
+            )}
+
+            <Box component="form" onSubmit={handleSubmit} noValidate
+              sx={{
+                '& .MuiOutlinedInput-root': {
+                  backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.7)',
+                  borderRadius: 2.5,
+                  transition: 'all 0.3s ease',
+                  '& input': { color: isDark ? '#E8EAED' : '#1A1A2E' },
+                  '& input:-webkit-autofill': {
+                    WebkitTextFillColor: isDark ? '#E8EAED' : '#1A1A2E',
+                    WebkitBoxShadow: isDark ? '0 0 0 100px #1A1D2E inset' : '0 0 0 100px rgba(255,255,255,0.9) inset',
+                  },
+                  '&:hover': { backgroundColor: isDark ? 'rgba(255,255,255,0.07)' : 'rgba(255,255,255,0.85)' },
+                  '&.Mui-focused': { backgroundColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(255,255,255,0.95)', boxShadow: `0 0 0 3px ${isDark ? 'rgba(139,131,255,0.15)' : 'rgba(108,99,255,0.1)'}` },
+                },
+                '& .MuiInputLabel-root': { color: isDark ? '#9AA0B4' : '#6B7280' },
+                '& .MuiInputLabel-root.Mui-focused': { color: '#6C63FF' },
+                '& .MuiOutlinedInput-notchedOutline': { borderColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.1)' },
+              }}>
+              <TextField
+                id="login-username" fullWidth label="Tên đăng nhập hoặc mã đăng nhập"
+                value={username} onChange={(e) => setUsername(e.target.value)} sx={{ mb: 2.5 }}
+                InputProps={{ startAdornment: <InputAdornment position="start"><PersonOutline sx={{ color: '#6C63FF' }} /></InputAdornment> }}
+                autoComplete="username" autoFocus
+              />
+              <TextField
+                id="login-password" fullWidth label="Mật khẩu"
+                type={showPassword ? 'text' : 'password'}
+                value={password} onChange={(e) => setPassword(e.target.value)} sx={{ mb: 3.5 }}
+                InputProps={{
+                  startAdornment: <InputAdornment position="start"><LockOutlined sx={{ color: '#6C63FF' }} /></InputAdornment>,
+                  endAdornment: <InputAdornment position="end">
+                    <IconButton onClick={() => setShowPassword(!showPassword)} edge="end" size="small" sx={{ color: isDark ? '#9AA0B4' : '#6B7280' }}>
+                      {showPassword ? <VisibilityOff /> : <Visibility />}
+                    </IconButton>
+                  </InputAdornment>,
+                }}
+                autoComplete="current-password"
+              />
+              <Button
+                id="login-submit" type="submit" fullWidth variant="contained" size="large" disabled={loading}
+                sx={{
+                  py: 1.6, fontSize: '1rem', fontWeight: 700, mb: 2.5, borderRadius: 3,
+                  background: 'linear-gradient(135deg, #6C63FF 0%, #8B83FF 50%, #6C63FF 100%)',
+                  backgroundSize: '200% 200%', animation: 'gradient-shift 3s ease infinite',
+                  boxShadow: '0 6px 28px rgba(108,99,255,0.35)',
+                  transition: 'all 0.3s ease',
+                  position: 'relative', overflow: 'hidden',
+                  '&::before': {
+                    content: '""', position: 'absolute', inset: 0,
+                    background: 'linear-gradient(to right, transparent, rgba(255,255,255,0.15), transparent)',
+                    transform: 'translateX(-100%)', transition: 'transform 0.5s ease',
+                  },
+                  '&:hover': {
+                    boxShadow: '0 8px 38px rgba(108,99,255,0.45)',
+                    transform: 'translateY(-2px)',
+                    '&::before': { transform: 'translateX(100%)' },
+                  },
+                }}>
+                {loading ? <CircularProgress size={24} sx={{ color: '#fff' }} /> : 'Đăng Nhập'}
+              </Button>
+              <Typography variant="body2" sx={{ textAlign: 'center', color: isDark ? '#9AA0B4' : '#6B7280' }}>
+                Chưa có tài khoản?{' '}
+                <Link component={RouterLink} to="/register"
+                  sx={{ color: '#6C63FF', fontWeight: 700, textDecoration: 'none', '&:hover': { color: '#5A52E0', textDecoration: 'underline' } }}>
+                  Đăng ký ngay
+                </Link>
+              </Typography>
+            </Box>
+          </CardContent>
+        </Card>
+      </Box>
+    </Box>
+  );
+}
