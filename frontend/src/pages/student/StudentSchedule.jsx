@@ -267,7 +267,7 @@ export default function StudentSchedule() {
                         backgroundColor: isToday ? (isDark ? 'rgba(108,99,255,0.04)' : 'rgba(108,99,255,0.02)') : 'transparent',
                       }}>
                         {s ? (
-                          <Tooltip title={`${s.subject || (s.scheduleType === 'CEREMONY' ? 'Chào cờ' : 'Sinh hoạt')} • GV: ${s.teacherName || '—'}`} arrow>
+                          <Tooltip title={`${s.subject || (s.scheduleType === 'CEREMONY' ? 'Chào cờ' : 'Sinh hoạt')}${s.scheduleType === 'CEREMONY' ? ' • Toàn trường' : ` • GV: ${s.teacherName || '—'}`}`} arrow>
                             <Box sx={{
                               p: 1, borderRadius: 2,
                               background: isDark ? `${color}12` : `${color}08`,
@@ -284,13 +284,13 @@ export default function StudentSchedule() {
                                 fontWeight: 700, color, fontSize: '0.8rem',
                                 whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
                               }}>
-                                {s.subject || (s.scheduleType === 'CEREMONY' ? '🚩 CC' : '🏫 SH')}
+                                {s.subject || (s.scheduleType === 'CEREMONY' ? '🚩 Chào cờ' : '🏫 Sinh hoạt lớp')}
                               </Typography>
                               <Typography variant="caption" sx={{
                                 color: 'text.secondary', display: 'block', fontSize: '0.65rem',
                                 whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
                               }}>
-                                {s.teacherName || '—'}
+                                {s.scheduleType === 'CEREMONY' ? 'Toàn trường' : (s.teacherName || '—')}
                               </Typography>
                             </Box>
                           </Tooltip>

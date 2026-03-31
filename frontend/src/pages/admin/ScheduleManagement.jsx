@@ -60,8 +60,12 @@ export default function ScheduleManagement() {
 
   // Filter teachers by selected subject
   const getFilteredTeachers = (subjectId) => {
-    if (subjectId === HOMEROOM_ID || subjectId === CEREMONY_ID) {
-      // "Sinh hoạt lớp" / "Chào cờ" → only homeroom teacher
+    if (subjectId === CEREMONY_ID) {
+      // Chào cờ → không cần giáo viên
+      return [];
+    }
+    if (subjectId === HOMEROOM_ID) {
+      // Sinh hoạt lớp → only homeroom teacher
       if (!currentClassroom?.homeroomTeacherId) return [];
       const ht = teachers.find(t => t.id === currentClassroom.homeroomTeacherId);
       return ht ? [ht] : [];
@@ -149,6 +153,7 @@ export default function ScheduleManagement() {
         payload.scheduleType = 'HOMEROOM';
       } else if (payload.subjectId === CEREMONY_ID) {
         payload.subjectId = null;
+        payload.teacherId = null; // Chào cờ không cần GV
         payload.scheduleType = 'CEREMONY';
       } else {
         payload.scheduleType = null;
@@ -199,7 +204,7 @@ export default function ScheduleManagement() {
       const payload = {
         classId: selectedClass,
         subjectId: (isHomeroom || isCeremony) ? null : batchSubject,
-        teacherId: batchTeacher,
+        teacherId: isCeremony ? null : batchTeacher, // Chào cờ không cần GV
         scheduleType: isHomeroom ? 'HOMEROOM' : isCeremony ? 'CEREMONY' : null,
         day, period,
       };
@@ -290,8 +295,8 @@ export default function ScheduleManagement() {
             </TextField>
             <TextField select label="Giáo viên" value={batchTeacher} onChange={(e) => setBatchTeacher(e.target.value)}
               size="small" sx={{ minWidth: 200 }}
-              disabled={batchSubject === HOMEROOM_ID}
-              helperText={batchSubject === HOMEROOM_ID ? 'Tự động: GVCN' : (batchFilteredTeachers.length === 0 ? 'Không có GV dạy môn này' : '')}>
+              disabled={batchSubject === HOMEROOM_ID || batchSubject === CEREMONY_ID}
+              helperText={batchSubject === CEREMONY_ID ? 'Chào cờ không cần GV' : batchSubject === HOMEROOM_ID ? 'Tự động: GVCN' : (batchFilteredTeachers.length === 0 ? 'Không có GV dạy môn này' : '')}>
               {batchFilteredTeachers.map(t => <MenuItem key={t.id} value={t.id}>{t.fullName || t.username} ({t.teacherCode})</MenuItem>)}
             </TextField>
             {batchSaving && <CircularProgress size={20} sx={{ color: '#10B981' }} />}
@@ -346,7 +351,7 @@ export default function ScheduleManagement() {
                             <Typography variant="body2" sx={{ fontWeight: 600, color: isCeremony ? '#EF4444' : isHomeroom ? '#F59E0B' : '#6C63FF', fontSize: 13 }}>
                               {s.subject || (isCeremony ? '🚩 Chào cờ' : '🏫 Sinh hoạt')}
                             </Typography>
-                            <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block', fontSize: 11 }}>{s.teacherName}</Typography>
+                            <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block', fontSize: 11 }}>{isCeremony ? 'Toàn trường' : s.teacherName}</Typography>
                             {!batchDeleteMode && (
                               <Box className="cell-actions" sx={{
                                 position: 'absolute', top: 2, right: 2, opacity: 0,
@@ -414,8 +419,8 @@ export default function ScheduleManagement() {
             {subjectOptions.map(s => <MenuItem key={s.subjectId} value={s.subjectId}>{s.subjectName}</MenuItem>)}
           </TextField>
           <TextField select label="Giáo viên" value={form.teacherId} onChange={(e) => setForm({ ...form, teacherId: e.target.value })} fullWidth
-            disabled={form.subjectId === HOMEROOM_ID}
-            helperText={form.subjectId === HOMEROOM_ID ? 'Tự động chọn GVCN của lớp' : (dialogFilteredTeachers.length === 0 ? 'Không có giáo viên dạy môn này' : '')}>
+            disabled={form.subjectId === HOMEROOM_ID || form.subjectId === CEREMONY_ID}
+            helperText={form.subjectId === CEREMONY_ID ? 'Chào cờ không cần giáo viên' : form.subjectId === HOMEROOM_ID ? 'Tự động chọn GVCN của lớp' : (dialogFilteredTeachers.length === 0 ? 'Không có giáo viên dạy môn này' : '')}>
             {dialogFilteredTeachers.map(t => <MenuItem key={t.id} value={t.id}>{t.fullName || t.username} ({t.teacherCode})</MenuItem>)}
           </TextField>
         </DialogContent>

@@ -172,7 +172,7 @@ export default function TeacherClassrooms() {
                   <TableCell sx={{ color: 'text.secondary', fontWeight: 600 }}>15 phút</TableCell>
                   <TableCell sx={{ color: 'text.secondary', fontWeight: 600 }}>1 tiết</TableCell>
                   <TableCell sx={{ color: 'text.secondary', fontWeight: 600 }}>Thi</TableCell>
-                  <TableCell sx={{ color: 'text.secondary', fontWeight: 600 }}>ĐTB</TableCell>
+                  <TableCell sx={{ color: 'text.secondary', fontWeight: 600 }}>Điểm trung bình</TableCell>
                 </TableRow></TableHead>
                 <TableBody>
                   {grades.length === 0 ? <TableRow><TableCell colSpan={6} align="center" sx={{ py: 6, color: 'text.secondary' }}>Chưa có điểm</TableCell></TableRow> :

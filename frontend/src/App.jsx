@@ -5,6 +5,7 @@ import { Box, CircularProgress } from '@mui/material';
 import MainLayout from './components/MainLayout';
 
 // === Trang công khai (lazy load) ===
+const HomePage = lazy(() => import('./pages/HomePage'));
 const LoginPage = lazy(() => import('./pages/LoginPage'));
 const RegisterPage = lazy(() => import('./pages/RegisterPage'));
 
@@ -64,6 +65,7 @@ export default function App() {
     <Suspense fallback={LoadingFallback}>
       <Routes>
         {/* Trang công khai */}
+        <Route path="/" element={<PublicRoute><HomePage /></PublicRoute>} />
         <Route path="/login" element={<PublicRoute><LoginPage /></PublicRoute>} />
         <Route path="/register" element={<PublicRoute><RegisterPage /></PublicRoute>} />
 
@@ -94,7 +96,7 @@ export default function App() {
         </Route>
 
         {/* Mặc định: chuyển về trang đăng nhập */}
-        <Route path="*" element={<Navigate to="/login" replace />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Suspense>
   );

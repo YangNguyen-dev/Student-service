@@ -157,48 +157,555 @@ frontend/src/
            grades
 ```
 
-### 4.2. Danh sách bảng
+### 4.2. Danh sách bảng tổng quan
 
-| STT | Bảng | Mô tả |
-|-----|------|--------|
-| 1 | `users` | Thông tin đăng nhập, hồ sơ cá nhân, avatar |
-| 2 | `roles` | Vai trò (ADMIN, TEACHER, STUDENT) |
-| 3 | `user_roles` | Liên kết users ↔ roles (nhiều-nhiều) |
-| 4 | `students` | Thông tin riêng của học sinh (mã HS, lớp) |
-| 5 | `teachers` | Thông tin riêng của giáo viên (mã GV, môn) |
-| 6 | `classrooms` | Lớp học (tên, GVCN, sĩ số tối đa) |
-| 7 | `subjects` | Môn học (tên, mô tả) |
-| 8 | `class_subjects` | Phân công GV dạy môn nào ở lớp nào |
-| 9 | `schedules` | Thời khóa biểu (ngày, tiết, lớp, môn, GV, loại tiết) |
-| 10 | `grades` | Điểm số (miệng, 15 phút, giữa kỳ, cuối kỳ) |
+| STT | Bảng | Mô tả | Số cột |
+|-----|------|--------|--------|
+| 1 | `users` | Thông tin đăng nhập, hồ sơ cá nhân, avatar | 6 |
+| 2 | `roles` | Vai trò (ADMIN, TEACHER, STUDENT) | 3 |
+| 3 | `user_roles` | Liên kết users ↔ roles (nhiều-nhiều) | 3 |
+| 4 | `students` | Thông tin riêng của học sinh (mã HS, lớp) | 5 |
+| 5 | `teachers` | Thông tin riêng của giáo viên (mã GV, môn) | 5 |
+| 6 | `classrooms` | Lớp học (tên, GVCN, sĩ số tối đa) | 4 |
+| 7 | `subjects` | Môn học (tên, mô tả) | 3 |
+| 8 | `class_subjects` | Phân công GV dạy môn nào ở lớp nào | 4 |
+| 9 | `schedules` | Thời khóa biểu (ngày, tiết, lớp, môn, GV, loại tiết) | 7 |
+| 10 | `grades` | Điểm số (miệng, 15 phút, giữa kỳ, cuối kỳ) | 8 |
 
-### 4.4. Bảng schedules — Cột `schedule_type`
+---
 
-| Giá trị | Mô tả |
-|---------|--------|
-| `NULL` | Tiết học bình thường (có môn học) |
-| `HOMEROOM` | Tiết Sinh hoạt lớp (GVCN, không có môn) |
-| `CEREMONY` | Tiết Chào cờ (GVCN, không có môn) |
+### 4.3. Chi tiết từng bảng
 
-### 4.3. Chi tiết bảng điểm (grades)
+#### 4.3.1. Bảng `users` — Người dùng
 
-| Cột | Kiểu | Mô tả |
-|-----|------|--------|
-| `ma_diem` | BIGINT (PK) | Mã điểm (tự tăng) |
-| `diem_mieng` | DOUBLE | Điểm miệng (hệ số 1) |
-| `diem_15_phut` | DOUBLE | Điểm 15 phút (hệ số 1) |
-| `diem_giua_ky` | DOUBLE | Điểm giữa kỳ (hệ số 3) |
-| `diem_cuoi_ky` | DOUBLE | Điểm cuối kỳ (hệ số 5) |
-| `student_id` | BIGINT (FK) | Học sinh |
-| `subject_id` | BIGINT (FK) | Môn học |
-| `teacher_id` | BIGINT (FK) | Giáo viên nhập điểm |
+> Lưu tài khoản đăng nhập chung cho tất cả vai trò. Mỗi người dùng có thể là Admin, Giáo viên, hoặc Học sinh.
 
-**Công thức tính ĐTB**: `Miệng×0.1 + 15Phút×0.1 + GiữaKỳ×0.3 + CuốiKỳ×0.5` (tính ở tầng Mapper, không lưu DB)
+| Cột | Kiểu dữ liệu | Ràng buộc | Mô tả |
+|-----|---------------|-----------|--------|
+| `user_id` | BIGINT | **PK**, AUTO_INCREMENT | Mã người dùng |
+| `username` | VARCHAR(150) | NOT NULL, UNIQUE | Tên đăng nhập |
+| `email` | VARCHAR(150) | NOT NULL, UNIQUE | Địa chỉ email |
+| `full_name` | VARCHAR(255) | NULL | Họ và tên đầy đủ |
+| `avatar_url` | VARCHAR(500) | NULL | Đường dẫn ảnh đại diện |
+| `password_hash` | VARCHAR(255) | NOT NULL | Mật khẩu đã mã hóa (BCrypt, strength=10) |
 
-### 4.5. File SQL đi kèm
+**Quan hệ:**
+- `1 — N` → `user_roles` (một user có nhiều vai trò)
+- `1 — 1` → `students` (nếu là học sinh, liên kết qua `user_id`)
+- `1 — 1` → `teachers` (nếu là giáo viên, liên kết qua `user_id`)
+
+---
+
+#### 4.3.2. Bảng `roles` — Vai trò
+
+> Bảng tra cứu vai trò người dùng. Dữ liệu được khởi tạo sẵn 3 bản ghi mặc định.
+
+| Cột | Kiểu dữ liệu | Ràng buộc | Mô tả |
+|-----|---------------|-----------|--------|
+| `role_id` | INT | **PK**, AUTO_INCREMENT | Mã vai trò |
+| `name` | VARCHAR(50) | NOT NULL, UNIQUE | Tên vai trò (Enum) |
+| `description` | VARCHAR(255) | NULL | Mô tả vai trò |
+
+**Giá trị Enum `Roles`:**
+
+| role_id | name | description |
+|---------|------|-------------|
+| 1 | `ADMIN` | Quản trị viên hệ thống |
+| 2 | `STUDENT` | Học sinh |
+| 3 | `TEACHER` | Giáo viên |
+
+**Quan hệ:**
+- `1 — N` → `user_roles` (một vai trò gán cho nhiều user)
+
+---
+
+#### 4.3.3. Bảng `user_roles` — Phân quyền người dùng
+
+> Bảng trung gian liên kết N-N giữa `users` và `roles`. Khóa chính là tổ hợp (`user_id`, `role_id`).
+
+| Cột | Kiểu dữ liệu | Ràng buộc | Mô tả |
+|-----|---------------|-----------|--------|
+| `user_id` | BIGINT | **PK**, FK → `users.user_id` | Mã người dùng |
+| `role_id` | INT | **PK**, FK → `roles.role_id` | Mã vai trò |
+| `created_at` | DATETIME | DEFAULT CURRENT_TIMESTAMP, không cập nhật | Thời gian gán quyền (tự động tạo) |
+
+**Ràng buộc FK:**
+- `user_id` → `users(user_id)` ON DELETE CASCADE
+- `role_id` → `roles(role_id)` ON DELETE CASCADE
+
+**Đặc điểm:** Sử dụng `@IdClass(UserRoleId)` trong JPA, composite primary key.
+
+---
+
+#### 4.3.4. Bảng `students` — Học sinh
+
+> Lưu thông tin riêng của học sinh. Liên kết 1-1 với `users` qua `@MapsId` (dùng chung `user_id` làm PK).
+
+| Cột | Kiểu dữ liệu | Ràng buộc | Mô tả |
+|-----|---------------|-----------|--------|
+| `user_id` | BIGINT | **PK**, FK → `users.user_id` | Mã người dùng (chia sẻ PK với `users`) |
+| `student_code` | VARCHAR(50) | NOT NULL, UNIQUE | Mã học sinh (VD: `HS001`) |
+| `date_of_birth` | DATE | NULL | Ngày sinh |
+| `gender` | TINYINT | NULL | Giới tính (Enum) |
+| `class_id` | BIGINT | NULL, FK → `classrooms.class_id` | Lớp đang học |
+
+**Giá trị Enum `Gender`:**
+
+| Giá trị DB | Enum Java | Mô tả |
+|------------|-----------|--------|
+| 0 | `MALE` | Nam |
+| 1 | `FEMALE` | Nữ |
+| 2 | `OTHER` | Khác |
+
+**Ràng buộc FK:**
+- `user_id` → `users(user_id)` ON DELETE CASCADE
+- `class_id` → `classrooms(class_id)` ON DELETE SET NULL
+
+**Quan hệ:**
+- `1 — 1` ← `users` (kế thừa PK, `@MapsId`)
+- `N — 1` → `classrooms` (nhiều HS thuộc 1 lớp)
+- `1 — N` → `grades` (một HS có nhiều bản ghi điểm cho các môn)
+
+---
+
+#### 4.3.5. Bảng `teachers` — Giáo viên
+
+> Lưu thông tin riêng của giáo viên. Liên kết 1-1 với `users` qua `@MapsId`.
+
+| Cột | Kiểu dữ liệu | Ràng buộc | Mô tả |
+|-----|---------------|-----------|--------|
+| `user_id` | BIGINT | **PK**, FK → `users.user_id` | Mã người dùng (chia sẻ PK với `users`) |
+| `teacher_code` | VARCHAR(50) | NOT NULL, UNIQUE | Mã giáo viên (VD: `GV001`) |
+| `date_of_birth` | DATE | NULL | Ngày sinh |
+| `gender` | TINYINT | NULL | Giới tính (Enum: `MALE`, `FEMALE`, `OTHER`) |
+| `subject_id` | BIGINT | NULL, FK → `subjects.subject_id` | Môn học phụ trách chính |
+
+**Ràng buộc FK:**
+- `user_id` → `users(user_id)` ON DELETE CASCADE
+- `subject_id` → `subjects(subject_id)` ON DELETE SET NULL
+
+**Quan hệ:**
+- `1 — 1` ← `users` (kế thừa PK, `@MapsId`)
+- `N — 1` → `subjects` (nhiều GV thuộc 1 môn)
+- `1 — 1` ← `classrooms` (GV là GVCN của 1 lớp, `mappedBy="homeroomTeacher"`)
+- `1 — N` → `grades` (GV nhập điểm cho nhiều bản ghi)
+- `1 — N` → `schedules` (GV có nhiều tiết dạy)
+- `1 — N` → `class_subjects` (GV được phân công dạy nhiều lớp-môn)
+
+---
+
+#### 4.3.6. Bảng `classrooms` — Lớp học
+
+> Lưu thông tin lớp học. Mỗi lớp có tối đa 1 GVCN (ràng buộc UNIQUE trên `teacher_id`).
+
+| Cột | Kiểu dữ liệu | Ràng buộc | Mô tả |
+|-----|---------------|-----------|--------|
+| `class_id` | BIGINT | **PK**, AUTO_INCREMENT | Mã lớp học |
+| `classroom_name` | VARCHAR(100) | NOT NULL, UNIQUE | Tên lớp (VD: `10A1`, `11B2`) |
+| `max_students` | INT | NULL | Sĩ số tối đa |
+| `teacher_id` | BIGINT | NULL, UNIQUE, FK → `teachers.user_id` | Giáo viên chủ nhiệm |
+
+**Ràng buộc FK:**
+- `teacher_id` → `teachers(user_id)` ON DELETE SET NULL
+
+**Ràng buộc đặc biệt:**
+- `teacher_id` có UNIQUE → mỗi GV chỉ chủ nhiệm tối đa 1 lớp (quan hệ 1-1)
+
+**Quan hệ:**
+- `1 — 1` → `teachers` (GVCN, `@OneToOne` + `@JoinColumn`)
+- `1 — N` → `students` (danh sách HS trong lớp)
+- `1 — N` → `schedules` (thời khóa biểu của lớp)
+- `1 — N` → `class_subjects` (phân công GVBM, `cascade=ALL`, `orphanRemoval=true`)
+
+---
+
+#### 4.3.7. Bảng `subjects` — Môn học
+
+> Lưu danh sách các môn học trong hệ thống.
+
+| Cột | Kiểu dữ liệu | Ràng buộc | Mô tả |
+|-----|---------------|-----------|--------|
+| `subject_id` | BIGINT | **PK**, AUTO_INCREMENT | Mã môn học |
+| `subject_name` | VARCHAR(150) | NOT NULL, UNIQUE | Tên môn học (VD: `Toán`, `Ngữ Văn`) |
+| `description` | VARCHAR(255) | NULL | Mô tả môn học |
+
+**Quan hệ:**
+- `1 — N` → `teachers` (nhiều GV cùng dạy 1 môn)
+- `1 — N` → `grades` (điểm theo từng môn)
+- `1 — N` → `schedules` (tiết học của môn)
+- `1 — N` → `class_subjects` (phân công lớp-môn)
+
+---
+
+#### 4.3.8. Bảng `class_subjects` — Phân công giáo viên bộ môn
+
+> Bảng trung gian xác định: **Lớp nào — Môn nào — Giáo viên nào dạy**. Ràng buộc UNIQUE trên cặp (`class_id`, `subject_id`) → mỗi lớp chỉ có 1 GV dạy 1 môn.
+
+| Cột | Kiểu dữ liệu | Ràng buộc | Mô tả |
+|-----|---------------|-----------|--------|
+| `id` | BIGINT | **PK**, AUTO_INCREMENT | Mã phân công |
+| `class_id` | BIGINT | NOT NULL, FK → `classrooms.class_id` | Lớp học |
+| `subject_id` | BIGINT | NOT NULL, FK → `subjects.subject_id` | Môn học |
+| `teacher_id` | BIGINT | NULL, FK → `teachers.user_id` | Giáo viên bộ môn |
+
+**Ràng buộc:**
+- UNIQUE(`class_id`, `subject_id`) — mỗi lớp chỉ có 1 bản ghi cho 1 môn
+- `class_id` → `classrooms(class_id)` ON DELETE CASCADE
+- `subject_id` → `subjects(subject_id)` ON DELETE CASCADE
+- `teacher_id` → `teachers(user_id)` ON DELETE SET NULL
+
+---
+
+#### 4.3.9. Bảng `schedules` — Thời khóa biểu
+
+> Mỗi tiết học = 1 bản ghi: Lớp + Ngày + Tiết + Môn + GV + Loại tiết. Hỗ trợ tiết đặc biệt (Sinh hoạt lớp, Chào cờ).
+
+| Cột | Kiểu dữ liệu | Ràng buộc | Mô tả |
+|-----|---------------|-----------|--------|
+| `schedules_id` | BIGINT | **PK**, AUTO_INCREMENT | Mã tiết học |
+| `day` | TINYINT | NOT NULL | Ngày trong tuần (Enum) |
+| `period` | INT | NOT NULL | Tiết học (1 – 10) |
+| `class_id` | BIGINT | NULL, FK → `classrooms.class_id` | Lớp học |
+| `subject_id` | BIGINT | NULL, FK → `subjects.subject_id` | Môn học (NULL nếu tiết đặc biệt) |
+| `teacher_id` | BIGINT | NULL, FK → `teachers.user_id` | Giáo viên dạy |
+| `schedule_type` | VARCHAR(255) | NULL | Loại tiết (NULL / `HOMEROOM` / `CEREMONY`) |
+
+**Giá trị Enum `Day`:**
+
+| Giá trị DB | Enum Java | Mô tả |
+|------------|-----------|--------|
+| 0 | `MONDAY` | Thứ Hai |
+| 1 | `TUESDAY` | Thứ Ba |
+| 2 | `WEDNESDAY` | Thứ Tư |
+| 3 | `THURSDAY` | Thứ Năm |
+| 4 | `FRIDAY` | Thứ Sáu |
+| 5 | `SATURDAY` | Thứ Bảy |
+
+**Giá trị cột `schedule_type`:**
+
+| Giá trị | Mô tả | Đặc điểm |
+|---------|--------|-----------|
+| `NULL` | Tiết học bình thường | Có `subject_id`, GV bộ môn |
+| `HOMEROOM` | Tiết Sinh hoạt lớp | Không có `subject_id`, GV = GVCN |
+| `CEREMONY` | Tiết Chào cờ | Không có `subject_id`, GV = GVCN |
+
+**Ràng buộc FK:**
+- `class_id` → `classrooms(class_id)` ON DELETE CASCADE
+- `subject_id` → `subjects(subject_id)` ON DELETE SET NULL
+- `teacher_id` → `teachers(user_id)` ON DELETE SET NULL
+
+**Lưu ý:** Hệ thống kiểm tra trùng lịch (cùng lớp + cùng ngày + cùng tiết) ở tầng Service trước khi thêm.
+
+---
+
+#### 4.3.10. Bảng `grades` — Điểm số
+
+> Mỗi bản ghi = điểm của 1 học sinh cho 1 môn, do 1 giáo viên nhập. Ràng buộc UNIQUE trên (`student_id`, `subject_id`) → mỗi HS chỉ có 1 bản ghi điểm / môn.
+
+| Cột | Kiểu dữ liệu | Ràng buộc | Mô tả |
+|-----|---------------|-----------|--------|
+| `ma_diem` | BIGINT | **PK**, AUTO_INCREMENT | Mã điểm |
+| `diem_mieng` | DOUBLE | NULL | Điểm miệng (hệ số 1) |
+| `diem_15_phut` | DOUBLE | NULL | Điểm 15 phút (hệ số 1) |
+| `diem_giua_ky` | DOUBLE | NULL | Điểm giữa kỳ (hệ số 3) |
+| `diem_cuoi_ky` | DOUBLE | NULL | Điểm cuối kỳ (hệ số 5) |
+| `student_id` | BIGINT | NOT NULL, FK → `students.user_id` | Học sinh |
+| `subject_id` | BIGINT | NULL, FK → `subjects.subject_id` | Môn học |
+| `teacher_id` | BIGINT | NULL, FK → `teachers.user_id` | Giáo viên đã nhập điểm |
+
+**Ràng buộc:**
+- UNIQUE(`student_id`, `subject_id`) — mỗi HS chỉ có 1 bản ghi điểm / môn
+- `student_id` → `students(user_id)` ON DELETE CASCADE
+- `subject_id` → `subjects(subject_id)` ON DELETE SET NULL
+- `teacher_id` → `teachers(user_id)` ON DELETE SET NULL
+
+**Công thức tính Điểm Trung Bình (ĐTB):**
+```
+ĐTB = Miệng × 0.1 + 15Phút × 0.1 + GiữaKỳ × 0.3 + CuốiKỳ × 0.5
+```
+> ĐTB được tính ở tầng Java Mapper (`GradeMapper.java`), **không lưu trong DB**.
+
+**Xếp loại học lực (tính ở Frontend):**
+
+| Xếp loại | Điều kiện |
+|-----------|-----------|
+| Giỏi | ĐTB ≥ 8.0 |
+| Khá | 6.5 ≤ ĐTB < 8.0 |
+| Trung bình | 5.0 ≤ ĐTB < 6.5 |
+| Yếu | ĐTB < 5.0 |
+| Chưa xét | Chưa đủ điểm |
+
+---
+
+### 4.4. Chi tiết các Enum trong hệ thống
+
+Hệ thống sử dụng **3 enum Java chính** (package `enums/`), **1 enum mã lỗi** (package `exception/`), và **các hằng số enum-like** ở Frontend.
+
+---
+
+#### 4.4.1. Enum `Roles` — Vai trò người dùng
+
+> **File**: `src/.../enums/Roles.java`  
+> **Lưu trữ DB**: `EnumType.STRING` → cột `VARCHAR` trong bảng `roles.name`
+
+```java
+public enum Roles {
+    ADMIN,    // Quản trị viên
+    TEACHER,  // Giáo viên
+    STUDENT;  // Học sinh
+}
+```
+
+| Giá trị Enum | Giá trị trong DB | Mô tả | Quyền truy cập |
+|---|---|---|---|
+| `ADMIN` | `"ADMIN"` | Quản trị viên hệ thống | Toàn quyền quản lý: users, HS, GV, lớp, môn, TKB, thống kê |
+| `TEACHER` | `"TEACHER"` | Giáo viên | Xem hồ sơ, lớp dạy, lịch dạy, nhập điểm, thống kê GV |
+| `STUDENT` | `"STUDENT"` | Học sinh | Xem hồ sơ, bảng điểm, thời khóa biểu |
+
+**Sử dụng tại:**
+- Entity `Role.name` → lưu tên vai trò vào bảng `roles`
+- `SecurityConfig.java` → phân quyền endpoint (`ROLE_ADMIN`, `ROLE_TEACHER`, `ROLE_STUDENT`)
+- `AuthenticationService.java` → gán vai trò khi đăng ký
+- Frontend `constants.js` → mapping tương ứng `ROLES = { ADMIN, TEACHER, STUDENT }`
+
+**Cơ chế hoạt động:**
+```
+Đăng ký → AuthService kiểm tra role trong RegisterRequest
+        → Tìm Role entity theo Roles.valueOf(roleName)
+        → Tạo UserRole liên kết user + role
+        → Lưu vào bảng user_roles
+```
+
+---
+
+#### 4.4.2. Enum `Gender` — Giới tính
+
+> **File**: `src/.../enums/Gender.java`  
+> **Lưu trữ DB**: `EnumType.ORDINAL` → cột `TINYINT` (0, 1, 2)
+
+```java
+public enum Gender {
+    MALE,    // Nam
+    FEMALE,  // Nữ
+    OTHER    // Khác
+}
+```
+
+| Ordinal (DB) | Giá trị Enum | Hiển thị Frontend | Mô tả |
+|---|---|---|---|
+| `0` | `MALE` | "Nam" | Giới tính nam |
+| `1` | `FEMALE` | "Nữ" | Giới tính nữ |
+| `2` | `OTHER` | "Khác" | Giới tính khác |
+
+**Sử dụng tại:**
+- Entity `Student.gender` → cột `students.gender` (TINYINT)
+- Entity `Teacher.gender` → cột `teachers.gender` (TINYINT)
+- `ProfileUpdateRequest.gender` → nhận từ frontend khi cập nhật hồ sơ
+- `StudentResponse.gender` / `TeacherResponse.gender` → trả về frontend
+
+**Cách mapping Frontend ↔ Backend:**
+```
+Frontend gửi:    { "gender": "MALE" }     (string)
+Backend nhận:    Gender.MALE              (enum, tự động parse)
+Lưu DB:          0                        (TINYINT ordinal)
+Trả frontend:    "MALE"                   (serialize thành string)
+Frontend hiển thị: gender === 'MALE' ? 'Nam' : gender === 'FEMALE' ? 'Nữ' : 'Khác'
+```
+
+---
+
+#### 4.4.3. Enum `Day` — Ngày trong tuần
+
+> **File**: `src/.../enums/Day.java`  
+> **Lưu trữ DB**: `EnumType.ORDINAL` → cột `TINYINT` (0 → 5)
+
+```java
+public enum Day {
+    MONDAY,     // Thứ Hai
+    TUESDAY,    // Thứ Ba
+    WEDNESDAY,  // Thứ Tư
+    THURSDAY,   // Thứ Năm
+    FRIDAY,     // Thứ Sáu
+    SATURDAY    // Thứ Bảy
+}
+```
+
+| Ordinal (DB) | Giá trị Enum | Nhãn tiếng Việt | JavaScript `getDay()` |
+|---|---|---|---|
+| `0` | `MONDAY` | Thứ 2 | `1` |
+| `1` | `TUESDAY` | Thứ 3 | `2` |
+| `2` | `WEDNESDAY` | Thứ 4 | `3` |
+| `3` | `THURSDAY` | Thứ 5 | `4` |
+| `4` | `FRIDAY` | Thứ 6 | `5` |
+| `5` | `SATURDAY` | Thứ 7 | `6` |
+
+> **Lưu ý:** Không có `SUNDAY` (Chủ nhật) vì trường phổ thông không học Chủ nhật.
+
+**Sử dụng tại:**
+- Entity `Schedule.day` → cột `schedules.day` (TINYINT)
+- `ScheduleRequest.dayOfWeek` → nhận chuỗi `"MONDAY"`, convert thành `Day` enum
+- `ScheduleResponse.dayOfWeek` → trả chuỗi `"MONDAY"` cho frontend
+- Frontend `constants.js` → mapping `DAY_LABELS` để hiển thị tiếng Việt
+
+**Mapping Frontend ↔ Backend:**
+```
+Frontend gửi:    { "dayOfWeek": "MONDAY" }
+Backend nhận:    Day.MONDAY (enum)
+Lưu DB:          0 (TINYINT)
+Frontend nhận:   "MONDAY" → DAY_LABELS["MONDAY"] → "Thứ 2"
+```
+
+---
+
+#### 4.4.4. Enum `ErrorCode` — Mã lỗi hệ thống
+
+> **File**: `src/.../exception/ErrorCode.java`  
+> **Không lưu DB** — chỉ dùng trong runtime để trả mã lỗi thống nhất qua API.
+
+```java
+public enum ErrorCode {
+    UNCATEGORIZED_EXIT(9999, "Uncategorized exit"),
+    USER_EXISTS(1001, "User already exists"),
+    USER_NOT_FOUND(1002, "User not found"),
+    INVALID_PASSWORD(1003, "Mật khẩu hiện tại không đúng"),
+    INVALID_ROLE(1004, "Invalid role. Must be STUDENT, TEACHER, or ADMIN"),
+    STUDENT_NOT_FOUND(1005, "Student not found"),
+    TEACHER_NOT_FOUND(1006, "Teacher not found"),
+    CLASSROOM_NOT_FOUND(1007, "Classroom not found"),
+    SUBJECT_NOT_FOUND(1008, "Subject not found"),
+    NOT_TEACHING_CLASS(1009, "You are not teaching this class"),
+    STUDENT_NO_CLASS(1010, "Student has no assigned class"),
+    STUDENT_NOT_IN_CLASS(1011, "Student does not belong to this class"),
+    CLASSROOM_EXISTS(1012, "Classroom name already exists"),
+    SUBJECT_EXISTS(1013, "Subject name already exists"),
+    SCHEDULE_NOT_FOUND(1014, "Schedule not found"),
+    SCHEDULE_CLASS_CONFLICT(1015, "Lớp đã có tiết học vào thời điểm này"),
+    SCHEDULE_TEACHER_CONFLICT(1016, "Giáo viên đã có lịch dạy vào thời điểm này");
+
+    int code;       // Mã số lỗi
+    String message; // Thông báo lỗi
+}
+```
+
+| Nhóm | Mã | Tên | Mô tả |
+|---|---|---|---|
+| **Chung** | 9999 | `UNCATEGORIZED_EXIT` | Lỗi không xác định |
+| **User** | 1001 | `USER_EXISTS` | Tên đăng nhập đã tồn tại (đăng ký) |
+| | 1002 | `USER_NOT_FOUND` | Không tìm thấy người dùng |
+| | 1003 | `INVALID_PASSWORD` | Sai mật khẩu hiện tại (đổi MK) |
+| | 1004 | `INVALID_ROLE` | Vai trò không hợp lệ |
+| **Học sinh** | 1005 | `STUDENT_NOT_FOUND` | Không tìm thấy học sinh |
+| | 1010 | `STUDENT_NO_CLASS` | Học sinh chưa có lớp |
+| | 1011 | `STUDENT_NOT_IN_CLASS` | HS không thuộc lớp này |
+| **Giáo viên** | 1006 | `TEACHER_NOT_FOUND` | Không tìm thấy giáo viên |
+| | 1009 | `NOT_TEACHING_CLASS` | GV không dạy lớp này |
+| **Lớp học** | 1007 | `CLASSROOM_NOT_FOUND` | Không tìm thấy lớp |
+| | 1012 | `CLASSROOM_EXISTS` | Tên lớp đã tồn tại |
+| **Môn học** | 1008 | `SUBJECT_NOT_FOUND` | Không tìm thấy môn |
+| | 1013 | `SUBJECT_EXISTS` | Tên môn đã tồn tại |
+| **Lịch học** | 1014 | `SCHEDULE_NOT_FOUND` | Không tìm thấy tiết |
+| | 1015 | `SCHEDULE_CLASS_CONFLICT` | Trùng lịch lớp |
+| | 1016 | `SCHEDULE_TEACHER_CONFLICT` | Trùng lịch giáo viên |
+
+**Cơ chế hoạt động:**
+```
+Service throw → new ApiException(ErrorCode.USER_NOT_FOUND)
+GlobalExceptionHandler bắt → trả về JSON:
+{
+  "code": 1002,
+  "message": "User not found"
+}
+```
+
+---
+
+#### 4.4.5. Giá trị Enum-like — `ScheduleType` (Loại tiết học)
+
+> **Không phải Java enum** — lưu dưới dạng `VARCHAR` trong cột `schedules.schedule_type`.  
+> Dùng để phân biệt tiết học bình thường và tiết đặc biệt (Sinh hoạt, Chào cờ).
+
+| Giá trị DB | Ý nghĩa | Có `subject_id`? | GV phụ trách | Hiển thị Frontend |
+|---|---|---|---|---|
+| `NULL` | Tiết học bình thường | ✅ Có | GV bộ môn | Tên môn học (VD: "Toán") |
+| `"HOMEROOM"` | Tiết Sinh hoạt lớp | ❌ Không | GVCN | 🏠 Sinh hoạt |
+| `"CEREMONY"` | Tiết Chào cờ | ❌ Không | GVCN | 🚩 Chào cờ |
+
+**Sử dụng tại:**
+- Entity `Schedule.scheduleType` → cột `schedule_type` (VARCHAR)
+- `ScheduleRequest.scheduleType` → frontend gửi `"HOMEROOM"` / `"CEREMONY"` / `null`
+- `ScheduleResponse.scheduleType` → trả về frontend để render đúng icon và màu
+
+---
+
+#### 4.4.6. Giá trị Enum-like — Frontend Constants
+
+> **File**: `frontend/src/constants.js`  
+> Các hằng số enum-like chỉ dùng ở Frontend, không có Java enum tương ứng.
+
+**a) `GRADE_TYPES` — Loại cột điểm:**
+
+| Key | Giá trị | Nhãn hiển thị | Hệ số |
+|---|---|---|---|
+| `ORAL` | `"oralScore"` | Miệng | ×1 (10%) |
+| `QUIZ15` | `"quiz15Score"` | 15 phút | ×1 (10%) |
+| `MIDTERM` | `"midtermScore"` | Giữa kỳ | ×3 (30%) |
+| `FINAL` | `"finalScore"` | Cuối kỳ | ×5 (50%) |
+| `AVERAGE` | `"averageScore"` | Trung bình | (tính tự động) |
+
+**b) `CLASSIFICATIONS` — Xếp loại học lực:**
+
+| Key | Nhãn | Điều kiện ĐTB | Màu | Emoji |
+|---|---|---|---|---|
+| `EXCELLENT` | Giỏi | ≥ 8.0 | `#10B981` (xanh lá) | 🏆 / ⭐ |
+| `GOOD` | Khá | ≥ 6.5 | `#3B82F6` (xanh dương) | 👍 |
+| `AVERAGE` | Trung bình | ≥ 5.0 | `#F59E0B` (vàng) | 📝 |
+| `WEAK` | Yếu | < 5.0 | `#EF4444` (đỏ) | 📚 |
+
+**c) `ROLE_COLORS` — Màu theo vai trò:**
+
+| Vai trò | Màu | Mã hex |
+|---|---|---|
+| Admin | Hồng đỏ | `#FF6584` |
+| Giáo viên | Xanh lá | `#10B981` |
+| Học sinh | Tím xanh | `#6C63FF` |
+
+---
+
+#### 4.4.7. Tổng hợp Enum
+
+| Enum | File Java | Giá trị | Lưu DB | Kiểu lưu |
+|------|-----------|---------|--------|----------|
+| `Roles` | `enums/Roles.java` | `ADMIN`, `TEACHER`, `STUDENT` | `roles.name` | VARCHAR (`EnumType.STRING`) |
+| `Gender` | `enums/Gender.java` | `MALE`, `FEMALE`, `OTHER` | `students.gender`, `teachers.gender` | TINYINT (`EnumType.ORDINAL`: 0, 1, 2) |
+| `Day` | `enums/Day.java` | `MONDAY` → `SATURDAY` | `schedules.day` | TINYINT (`EnumType.ORDINAL`: 0 → 5) |
+| `ErrorCode` | `exception/ErrorCode.java` | 17 mã lỗi (1001 → 9999) | Không lưu | Runtime only |
+| `ScheduleType` | (không có enum riêng) | `NULL`, `HOMEROOM`, `CEREMONY` | `schedules.schedule_type` | VARCHAR |
+
+### 4.5. Tổng hợp quan hệ giữa các bảng
+
+| Mối quan hệ | Kiểu | Mô tả |
+|--------------|------|--------|
+| `users` ↔ `roles` | N — N | Qua bảng trung gian `user_roles` |
+| `users` ↔ `students` | 1 — 1 | Chia sẻ PK (`@MapsId`), ON DELETE CASCADE |
+| `users` ↔ `teachers` | 1 — 1 | Chia sẻ PK (`@MapsId`), ON DELETE CASCADE |
+| `students` → `classrooms` | N — 1 | Nhiều HS thuộc 1 lớp |
+| `teachers` → `subjects` | N — 1 | Nhiều GV cùng dạy 1 môn chính |
+| `teachers` ↔ `classrooms` | 1 — 1 | 1 GV chủ nhiệm tối đa 1 lớp (UNIQUE FK) |
+| `class_subjects` → `classrooms` | N — 1 | Nhiều phân công cho 1 lớp |
+| `class_subjects` → `subjects` | N — 1 | Nhiều phân công cho 1 môn |
+| `class_subjects` → `teachers` | N — 1 | 1 GV được phân nhiều lớp-môn |
+| `schedules` → `classrooms` | N — 1 | Nhiều tiết thuộc 1 lớp |
+| `schedules` → `subjects` | N — 1 | Nhiều tiết thuộc 1 môn |
+| `schedules` → `teachers` | N — 1 | Nhiều tiết do 1 GV dạy |
+| `grades` → `students` | N — 1 | Nhiều điểm thuộc 1 HS |
+| `grades` → `subjects` | N — 1 | Nhiều điểm thuộc 1 môn |
+| `grades` → `teachers` | N — 1 | Nhiều điểm do 1 GV nhập |
+
+### 4.6. File SQL đi kèm
+
 | File | Mô tả |
 |------|--------|
-| `database.sql` | Tạo toàn bộ cấu trúc DB (10 bảng + FK + comment) |
+| `database.sql` | Tạo toàn bộ cấu trúc DB (10 bảng + FK + comment + dữ liệu roles mặc định) |
 | `seed_data.sql` | Dữ liệu mẫu (22 GV, 66 HS, 11 môn, 3 lớp) |
 
 ---

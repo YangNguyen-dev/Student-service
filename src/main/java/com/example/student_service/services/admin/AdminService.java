@@ -270,8 +270,13 @@ public class AdminService implements AdminServiceImp {
     public Schedule createSchedule(ScheduleRequest request) {
         Classroom classroom = classroomRepository.findById(request.getClassId())
                 .orElseThrow(() -> new ApiException(ErrorCode.CLASSROOM_NOT_FOUND));
-        Teacher teacher = teacherRepository.findById(request.getTeacherId())
-                .orElseThrow(() -> new ApiException(ErrorCode.TEACHER_NOT_FOUND));
+
+        // Teacher có thể null (tiết Chào cờ không cần GV)
+        Teacher teacher = null;
+        if (request.getTeacherId() != null) {
+            teacher = teacherRepository.findById(request.getTeacherId())
+                    .orElseThrow(() -> new ApiException(ErrorCode.TEACHER_NOT_FOUND));
+        }
 
         com.example.student_service.enums.Day day = com.example.student_service.enums.Day.valueOf(request.getDay());
         Integer period = request.getPeriod();
@@ -280,11 +285,13 @@ public class AdminService implements AdminServiceImp {
         scheduleRepository.findByClassroom_ClassIdAndDayAndPeriod(request.getClassId(), day, period)
                 .ifPresent(s -> { throw new ApiException(ErrorCode.SCHEDULE_CLASS_CONFLICT); });
 
-        // Kiểm tra trùng lịch giáo viên: cùng GV, cùng ngày, cùng tiết
-        scheduleRepository.findByTeacher_IdAndDayAndPeriod(request.getTeacherId(), day, period)
-                .ifPresent(s -> { throw new ApiException(ErrorCode.SCHEDULE_TEACHER_CONFLICT); });
+        // Kiểm tra trùng lịch giáo viên: cùng GV, cùng ngày, cùng tiết (chỉ khi có GV)
+        if (request.getTeacherId() != null) {
+            scheduleRepository.findByTeacher_IdAndDayAndPeriod(request.getTeacherId(), day, period)
+                    .ifPresent(s -> { throw new ApiException(ErrorCode.SCHEDULE_TEACHER_CONFLICT); });
+        }
 
-        // Môn có thể null (tiết Sinh hoạt lớp)
+        // Môn có thể null (tiết Sinh hoạt lớp / Chào cờ)
         Subject subject = null;
         if (request.getSubjectId() != null) {
             subject = subjectRepository.findById(request.getSubjectId())
@@ -308,8 +315,13 @@ public class AdminService implements AdminServiceImp {
                 .orElseThrow(() -> new ApiException(ErrorCode.SCHEDULE_NOT_FOUND));
         Classroom classroom = classroomRepository.findById(request.getClassId())
                 .orElseThrow(() -> new ApiException(ErrorCode.CLASSROOM_NOT_FOUND));
-        Teacher teacher = teacherRepository.findById(request.getTeacherId())
-                .orElseThrow(() -> new ApiException(ErrorCode.TEACHER_NOT_FOUND));
+
+        // Teacher có thể null (tiết Chào cờ không cần GV)
+        Teacher teacher = null;
+        if (request.getTeacherId() != null) {
+            teacher = teacherRepository.findById(request.getTeacherId())
+                    .orElseThrow(() -> new ApiException(ErrorCode.TEACHER_NOT_FOUND));
+        }
 
         com.example.student_service.enums.Day day = com.example.student_service.enums.Day.valueOf(request.getDay());
         Integer period = request.getPeriod();
@@ -318,9 +330,11 @@ public class AdminService implements AdminServiceImp {
         scheduleRepository.findByClassroom_ClassIdAndDayAndPeriod(request.getClassId(), day, period)
                 .ifPresent(s -> { if (!s.getScheduleId().equals(scheduleId)) throw new ApiException(ErrorCode.SCHEDULE_CLASS_CONFLICT); });
 
-        // Kiểm tra trùng lịch giáo viên (bỏ qua chính nó)
-        scheduleRepository.findByTeacher_IdAndDayAndPeriod(request.getTeacherId(), day, period)
-                .ifPresent(s -> { if (!s.getScheduleId().equals(scheduleId)) throw new ApiException(ErrorCode.SCHEDULE_TEACHER_CONFLICT); });
+        // Kiểm tra trùng lịch giáo viên (bỏ qua chính nó, chỉ khi có GV)
+        if (request.getTeacherId() != null) {
+            scheduleRepository.findByTeacher_IdAndDayAndPeriod(request.getTeacherId(), day, period)
+                    .ifPresent(s -> { if (!s.getScheduleId().equals(scheduleId)) throw new ApiException(ErrorCode.SCHEDULE_TEACHER_CONFLICT); });
+        }
 
         Subject subject = null;
         if (request.getSubjectId() != null) {

@@ -8,7 +8,7 @@ import {
 } from '@mui/material';
 import {
   Visibility, VisibilityOff, SchoolRounded, PersonOutline, LockOutlined,
-  EmailOutlined, BadgeOutlined, LightModeRounded, DarkModeRounded, AutoAwesomeRounded,
+  EmailOutlined, BadgeOutlined, LightModeRounded, DarkModeRounded, AutoAwesomeRounded, HomeRounded,
 } from '@mui/icons-material';
 
 const ROLES = [
@@ -89,6 +89,24 @@ export default function RegisterPage() {
           animation: `float-gentle ${3 + i * 1.5}s ease-in-out infinite ${i * 0.6}s`, filter: 'blur(1px)',
         }} />
       ))}
+
+      {/* Back to home */}
+      <Button
+        startIcon={<HomeRounded />}
+        onClick={() => navigate('/')}
+        sx={{
+          position: 'absolute', top: 20, left: 20, zIndex: 10,
+          color: isDark ? '#8B83FF' : '#6C63FF',
+          backgroundColor: isDark ? 'rgba(108,99,255,0.1)' : 'rgba(108,99,255,0.06)',
+          backdropFilter: 'blur(10px)',
+          border: isDark ? '1px solid rgba(139,131,255,0.2)' : '1px solid rgba(108,99,255,0.12)',
+          borderRadius: 3, textTransform: 'none', fontWeight: 600, px: 2, py: 0.8,
+          transition: 'all 0.3s ease',
+          '&:hover': { backgroundColor: isDark ? 'rgba(108,99,255,0.18)' : 'rgba(108,99,255,0.12)', transform: 'translateX(-2px)' },
+        }}
+      >
+        Trang chủ
+      </Button>
 
       {/* Theme toggle */}
       <Tooltip title={isDark ? 'Chế độ sáng' : 'Chế độ tối'}>

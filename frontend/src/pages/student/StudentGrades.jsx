@@ -68,7 +68,7 @@ export default function StudentGrades() {
 
   const summaryCards = [
     {
-      icon: <TrendingUpRounded />, label: 'Điểm TB', value: totalAvg.toFixed(1),
+      icon: <TrendingUpRounded />, label: 'Điểm trung bình', value: totalAvg.toFixed(1),
       accent: getGradeColor(totalAvg), sub: getGradeLabel(totalAvg),
     },
     {
@@ -181,11 +181,11 @@ export default function StudentGrades() {
             <TableHead>
               <TableRow>
                 <TableCell sx={{ fontWeight: 700, color: 'text.secondary', fontSize: '0.8rem' }}>Môn học</TableCell>
-                <TableCell align="center" sx={{ fontWeight: 700, color: 'text.secondary', fontSize: '0.8rem' }}>TX 1</TableCell>
-                <TableCell align="center" sx={{ fontWeight: 700, color: 'text.secondary', fontSize: '0.8rem' }}>TX 2</TableCell>
+                <TableCell align="center" sx={{ fontWeight: 700, color: 'text.secondary', fontSize: '0.8rem' }}>Thường xuyên 1</TableCell>
+                <TableCell align="center" sx={{ fontWeight: 700, color: 'text.secondary', fontSize: '0.8rem' }}>Thường xuyên 2</TableCell>
                 <TableCell align="center" sx={{ fontWeight: 700, color: 'text.secondary', fontSize: '0.8rem' }}>Giữa kỳ</TableCell>
                 <TableCell align="center" sx={{ fontWeight: 700, color: 'text.secondary', fontSize: '0.8rem' }}>Cuối kỳ</TableCell>
-                <TableCell align="center" sx={{ fontWeight: 700, color: 'text.secondary', fontSize: '0.8rem' }}>TB Môn</TableCell>
+                <TableCell align="center" sx={{ fontWeight: 700, color: 'text.secondary', fontSize: '0.8rem' }}>Điểm trung bình môn</TableCell>
                 <TableCell align="center" sx={{ fontWeight: 700, color: 'text.secondary', fontSize: '0.8rem' }}>Xếp loại</TableCell>
               </TableRow>
             </TableHead>

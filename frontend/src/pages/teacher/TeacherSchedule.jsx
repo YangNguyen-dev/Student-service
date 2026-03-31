@@ -139,10 +139,10 @@ export default function TeacherSchedule() {
                     return (
                       <TableCell key={d.value} sx={{ textAlign: 'center', p: 0.8, backgroundColor: isToday ? (isDark ? 'rgba(16,185,129,0.04)' : 'rgba(16,185,129,0.02)') : 'transparent' }}>
                         {s ? (
-                          <Tooltip title={`${s.subject || (s.scheduleType === 'CEREMONY' ? 'Chào cờ' : 'Sinh hoạt')} • Lớp ${s.classroomName}`} arrow>
+                          <Tooltip title={`${s.subject || (s.scheduleType === 'CEREMONY' ? 'Chào cờ' : 'Sinh hoạt')}${s.scheduleType === 'CEREMONY' ? ' • Toàn trường' : ` • Lớp ${s.classroomName}`}`} arrow>
                             <Box sx={{ p: 1, borderRadius: 2, background: isDark ? `${color}12` : `${color}08`, border: `1px solid ${color}20`, transition: 'all 0.25s', cursor: 'default', '&:hover': { background: isDark ? `${color}20` : `${color}14`, transform: 'scale(1.03)', boxShadow: `0 4px 12px ${color}18` } }}>
-                              <Typography variant="body2" sx={{ fontWeight: 700, color, fontSize: '0.8rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{s.subject || (s.scheduleType === 'CEREMONY' ? '🚩 CC' : '🏫 SH')}</Typography>
-                              <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block', fontSize: '0.65rem' }}>{s.classroomName || '—'}</Typography>
+                              <Typography variant="body2" sx={{ fontWeight: 700, color, fontSize: '0.8rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{s.subject || (s.scheduleType === 'CEREMONY' ? '🚩 Chào cờ' : '🏫 Sinh hoạt lớp')}</Typography>
+                              <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block', fontSize: '0.65rem' }}>{s.scheduleType === 'CEREMONY' ? 'Toàn trường' : (s.classroomName || '—')}</Typography>
                             </Box>
                           </Tooltip>
                         ) : <Typography variant="caption" sx={{ color: 'text.disabled' }}>—</Typography>}

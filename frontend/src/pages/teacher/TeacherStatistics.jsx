@@ -111,7 +111,7 @@ export default function TeacherStatistics() {
             setHomeroomSubjectAvg(
               Object.entries(subjectMap).map(([name, { total, count }]) => ({
                 name,
-                'Điểm TB': Math.round((total / count) * 100) / 100,
+                'Điểm trung bình': Math.round((total / count) * 100) / 100,
               }))
             );
           }
@@ -135,7 +135,7 @@ export default function TeacherStatistics() {
               totalGraded += validGrades.length;
               passCount += validGrades.filter(g => g.averageScore >= 5).length;
 
-              // Tính ĐTB lớp
+              // Tính Điểm trung bình lớp
               let avg = 0;
               if (validGrades.length > 0) {
                 avg = validGrades.reduce((sum, g) => sum + g.averageScore, 0) / validGrades.length;
@@ -143,15 +143,15 @@ export default function TeacherStatistics() {
               }
               classAvgs.push({
                 name: cls.classroomName,
-                'Điểm TB': Math.round(avg * 100) / 100,
+                'Điểm trung bình': Math.round(avg * 100) / 100,
                 'Số HS': validGrades.length,
               });
 
               // Tính xếp loại từng HS trong lớp dạy
-              const rc = { 'Giỏi': 0, 'Khá': 0, 'TB': 0, 'Yếu': 0 };
+              const rc = { 'Giỏi': 0, 'Khá': 0, 'Trung bình': 0, 'Yếu': 0 };
               validGrades.forEach(g => {
                 const r = getRank(g.averageScore);
-                if (r === 'Trung bình') rc['TB']++;
+                if (r === 'Trung bình') rc['Trung bình']++;
                 else rc[r]++;
               });
               rankByClass.push({ name: cls.classroomName, ...rc });
@@ -168,10 +168,10 @@ export default function TeacherStatistics() {
             setTeachingOverallAvg(Math.round(overall * 100) / 100);
           }
 
-          // Lớp có ĐTB cao nhất
+          // Lớp có Điểm trung bình cao nhất
           if (classAvgs.length > 0) {
-            const best = classAvgs.reduce((a, b) => (a['Điểm TB'] >= b['Điểm TB'] ? a : b));
-            if (best['Điểm TB'] > 0) setTeachingBestClass(`${best.name} (${best['Điểm TB']})`);
+            const best = classAvgs.reduce((a, b) => (a['Điểm trung bình'] >= b['Điểm trung bình'] ? a : b));
+            if (best['Điểm trung bình'] > 0) setTeachingBestClass(`${best.name} (${best['Điểm trung bình']})`);
           }
         } catch { }
 
@@ -213,7 +213,7 @@ export default function TeacherStatistics() {
               { label: 'Sĩ số', value: homeroomTotal, icon: <SchoolRounded sx={{ fontSize: 18 }} />, color: '#6C63FF' },
               { label: 'Giỏi', value: homeroomRankCount['Giỏi'], icon: <EmojiEventsRounded sx={{ fontSize: 18 }} />, color: '#10B981' },
               { label: 'Khá', value: homeroomRankCount['Khá'], icon: <ThumbUpRounded sx={{ fontSize: 18 }} />, color: '#2196F3' },
-              { label: 'TB', value: homeroomRankCount['Trung bình'], icon: <GradeRounded sx={{ fontSize: 18 }} />, color: '#FF9800' },
+              { label: 'Trung bình', value: homeroomRankCount['Trung bình'], icon: <GradeRounded sx={{ fontSize: 18 }} />, color: '#FF9800' },
               { label: 'Yếu', value: homeroomRankCount['Yếu'], icon: <SentimentDissatisfiedRounded sx={{ fontSize: 18 }} />, color: '#FF5252' },
               { label: 'Chưa xét', value: homeroomRankCount['Chưa xét'], icon: <HelpOutlineRounded sx={{ fontSize: 18 }} />, color: '#9E9E9E' },
             ].map((r, i) => (
@@ -265,8 +265,8 @@ export default function TeacherStatistics() {
                         <XAxis dataKey="name" tick={{ fill: isDark ? '#94A3B8' : '#64748B', fontSize: 12 }} angle={-35} textAnchor="end" interval={0} height={60} />
                         <YAxis domain={[0, 10]} tick={{ fill: isDark ? '#94A3B8' : '#64748B', fontSize: 12 }} />
                         <Tooltip contentStyle={{ background: isDark ? '#1E293B' : '#fff', border: 'none', borderRadius: 8 }}
-                          formatter={(value) => [value.toFixed(2), 'Điểm TB']} />
-                        <Bar dataKey="Điểm TB" fill="#FF6584" radius={[4, 4, 0, 0]} />
+                          formatter={(value) => [value.toFixed(2), 'Điểm trung bình']} />
+                        <Bar dataKey="Điểm trung bình" fill="#FF6584" radius={[4, 4, 0, 0]} />
                       </BarChart>
                     </ResponsiveContainer>
                   ) : (
@@ -301,7 +301,7 @@ export default function TeacherStatistics() {
         {[
           { label: 'Số lớp dạy', value: teachingTotal, icon: <ClassRounded sx={{ fontSize: 20 }} />, color: '#10B981' },
           { label: 'Tỉ lệ đạt (≥5)', value: teachingPassRate != null ? `${teachingPassRate}%` : '—', icon: <ThumbUpRounded sx={{ fontSize: 20 }} />, color: '#6C63FF' },
-          { label: 'ĐTB chung', value: teachingOverallAvg != null ? teachingOverallAvg.toFixed(2) : '—', icon: <TrendingUpRounded sx={{ fontSize: 20 }} />, color: '#2196F3' },
+          { label: 'Điểm trung bình chung', value: teachingOverallAvg != null ? teachingOverallAvg.toFixed(2) : '—', icon: <TrendingUpRounded sx={{ fontSize: 20 }} />, color: '#2196F3' },
           { label: 'Lớp cao nhất', value: teachingBestClass, icon: <EmojiEventsRounded sx={{ fontSize: 20 }} />, color: '#FF9800', isText: true },
         ].map((r, i) => (
           <Card key={r.label} sx={{ flex: '1 1 160px', borderRadius: 3, animation: `slideUp 0.5s ease-out ${i * 0.08}s both`, transition: 'all 0.3s', border: '1px solid', borderColor: `${r.color}25`, '&:hover': { transform: 'translateY(-2px)', boxShadow: `0 4px 20px ${r.color}20` } }}>
@@ -332,7 +332,7 @@ export default function TeacherStatistics() {
                     <Legend />
                     <Bar dataKey="Giỏi" stackId="rank" fill="#4CAF50" radius={[0, 0, 0, 0]} />
                     <Bar dataKey="Khá" stackId="rank" fill="#2196F3" />
-                    <Bar dataKey="TB" stackId="rank" fill="#FF9800" />
+                    <Bar dataKey="Trung bình" stackId="rank" fill="#FF9800" />
                     <Bar dataKey="Yếu" stackId="rank" fill="#FF5252" radius={[4, 4, 0, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
@@ -345,7 +345,7 @@ export default function TeacherStatistics() {
           </Card>
         </Grid>
 
-        {/* Biểu đồ ĐTB theo lớp */}
+        {/* Biểu đồ Điểm trung bình theo lớp */}
         <Grid size={{ xs: 12, md: 6 }}>
           <Card sx={{ height: '100%' }}>
             <CardContent>
@@ -357,9 +357,9 @@ export default function TeacherStatistics() {
                     <XAxis dataKey="name" tick={{ fill: isDark ? '#94A3B8' : '#64748B', fontSize: 12 }} angle={-35} textAnchor="end" interval={0} height={60} />
                     <YAxis domain={[0, 10]} tick={{ fill: isDark ? '#94A3B8' : '#64748B', fontSize: 12 }} />
                     <Tooltip contentStyle={{ background: isDark ? '#1E293B' : '#fff', border: 'none', borderRadius: 8 }}
-                      formatter={(value, name) => [name === 'Điểm TB' ? value.toFixed(2) : value, name]} />
+                      formatter={(value, name) => [name === 'Điểm trung bình' ? value.toFixed(2) : value, name]} />
                     <Legend />
-                    <Bar dataKey="Điểm TB" fill="#10B981" radius={[4, 4, 0, 0]} barSize={50} />
+                    <Bar dataKey="Điểm trung bình" fill="#10B981" radius={[4, 4, 0, 0]} barSize={50} />
                   </BarChart>
                 </ResponsiveContainer>
               ) : (

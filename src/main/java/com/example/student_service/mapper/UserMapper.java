@@ -53,10 +53,10 @@ public interface UserMapper {
     @Mapping(target = "dayOfWeek", source = "day")
     @Mapping(target = "period", source = "period")
     @Mapping(target = "subject", expression = "java(schedule.getSubject() != null ? schedule.getSubject().getSubjectname() : null)")
-    @Mapping(target = "teacherName", expression = "java(schedule.getTeacher().getUser().getFullName() != null ? schedule.getTeacher().getUser().getFullName() : schedule.getTeacher().getUser().getUsername())")
+    @Mapping(target = "teacherName", expression = "java(schedule.getTeacher() != null ? (schedule.getTeacher().getUser().getFullName() != null ? schedule.getTeacher().getUser().getFullName() : schedule.getTeacher().getUser().getUsername()) : null)")
     @Mapping(target = "classroomName", source = "classroom.classroomName")
     @Mapping(target = "subjectId", expression = "java(schedule.getSubject() != null ? schedule.getSubject().getSubjectId() : null)")
-    @Mapping(target = "teacherId", source = "teacher.id")
+    @Mapping(target = "teacherId", expression = "java(schedule.getTeacher() != null ? schedule.getTeacher().getId() : null)")
     @Mapping(target = "classId", source = "classroom.classId")
     ScheduleResponse toScheduleResponse(Schedule schedule);
 
